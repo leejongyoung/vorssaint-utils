@@ -77,8 +77,11 @@ enum UpdateServiceSupport {
 
             let parts = withoutBuild.components(separatedBy: "-")
             let corePart = parts[0]
-            let coreNumbers = corePart.components(separatedBy: ".").compactMap { Int($0) }
-            guard !coreNumbers.isEmpty else { return nil }
+            // Every core segment must be numeric; dropping bad ones would shift
+            // positions (e.g. "2.invalid.9" must not become 2.9.0).
+            let coreSegments = corePart.components(separatedBy: ".")
+            let coreNumbers = coreSegments.compactMap { Int($0) }
+            guard !coreNumbers.isEmpty, coreNumbers.count == coreSegments.count else { return nil }
 
             self.major = coreNumbers.indices.contains(0) ? coreNumbers[0] : 0
             self.minor = coreNumbers.indices.contains(1) ? coreNumbers[1] : 0

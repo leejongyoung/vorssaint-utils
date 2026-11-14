@@ -1133,6 +1133,18 @@ enum UpdateFeatureTests {
         suite.expect(!UpdateServiceSupport.isNewer("3.3.4-beta.1", than: "3.3.4"),
                "beta is not newer than the released final version")
 
+        // Malformed core segments must be rejected, not silently dropped (2.invalid.9 != 2.9.0).
+        suite.expect(UpdateServiceSupport.SemanticVersion(raw: "2.invalid.9") == nil,
+               "non-numeric middle core segment is rejected")
+        suite.expect(UpdateServiceSupport.SemanticVersion(raw: "invalid.9.0") == nil,
+               "non-numeric leading core segment is rejected")
+        suite.expect(UpdateServiceSupport.SemanticVersion(raw: "1.2.x") == nil,
+               "non-numeric trailing core segment is rejected")
+        suite.expect(!UpdateServiceSupport.isNewer("2.invalid.9", than: "2.8.0"),
+               "malformed tag is never offered as an update")
+        suite.expect(UpdateServiceSupport.SemanticVersion(raw: "3.4")?.patch == 0,
+               "two-part version still pads patch with 0")
+
         suite.expect(UpdateServiceSupport.isNewer("3.4.0-beta.2.1", than: "3.4.0-beta.2")
                && !UpdateServiceSupport.isNewer("3.4.0-beta.2", than: "3.4.0-beta.2.1")
                && UpdateServiceSupport.isNewer("3.4.0-beta.3", than: "3.4.0-beta.2.1")
